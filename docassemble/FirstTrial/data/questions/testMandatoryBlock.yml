@@ -1,0 +1,391 @@
+---
+include:
+  - docassemble.ALToolbox:escape_button.yml
+  # docassemble.AssemblyLine:assembly_line.yml
+  # docassemble.AKA2JBranding:custom_organization.yml
+  # Need to add "Respondent" if they don't know the respondent's name vs. using res_first_name.
+---
+mandatory: true
+id: interview order
+code: |
+  if not protection_self: 
+    know_res_name
+  else: 
+    children.there_are_any
+---
+question: |
+  # CIVIL PROTECTIVE ORDER
+  * If you are in danger now, call 911.
+  * Use this form to ask a judge for a domestic violence, stalking, or sexual assault civil protective order in Alaska. 
+
+subquestion: |
+  ## How does this work?
+  
+  
+  1. The interview style form will ask you questions and create forms for you.
+  2. Print the forms and file them at the courthouse.
+  3. After the court has your forms, the court clerk will contact you.
+  
+  * Print your forms in a safe location such as a domestic violence shelter.
+  * You may email a copy to yourself and print it later.
+  * Click [here](https://www.techsafety.org/internetbrowserprivacytips) for more information about tech safety.
+continue button field: introduction
+---
+features:
+  progress bar: True
+---
+id: STEP 1 Do You or Others Need Protection
+question: |
+  Do you need protection from somebody?
+yesno: protection_self
+---
+id: kickout no PO screen
+question: |
+  You're in the wrong place.
+#  buttons: 
+#    - go away: exit
+continue button field: quit
+---
+code: |
+  children.gather()
+---
+objects:
+  - children: DAList.using(object_type=Individual)
+---
+question: |
+  Do any children need protection?
+yesno: children.there_are_any
+---
+question: |
+  What is the ${ordinal(i)} child's name?
+fields:
+  - First name: children[i].name.first
+    hint: TEST
+  - Last name: children[i].name.last
+---
+question: |
+  Do any more children need protection?
+yesno: children.there_is_another
+---
+code: |
+  # Need to add an else/if. If they select no to both questions above, then a screen comes up indicating this is likely not the correct form. Below, if they are related, then ask if they know resondent name. if they do, then respondent name fields pop up.
+---
+id: Step 2 Relationship to Respondent
+question: |
+  Do you know the name of the person you need protection from?
+yesno: know_res_name
+  # if they dont know the name then need to skip the next questions.  Also, how to use "respondent" if they don't know their name?
+---
+objects:
+  - respondent: Individual
+---
+question: |
+  Who do you need protection from?
+subquestion: |
+  Include as much information as posible:
+fields:
+  - First Name: res_first_name
+    required: False
+  - Middle Name: res_mid_name
+    required: False
+  - Last Name: res_last_name
+    required: False
+  - List any Nicknames: res_nicknames
+    required: False
+  - Date of Birth: res_dob
+    required: False
+---
+question: |
+  Are you related to the respondent?
+yesno: know_res
+#if yes, go to relationship choice screen
+#if no, go to "how do you know them" choice screen
+---
+question: |
+  How are you related to ${ res_first_name }?
+fields:
+  - no label: relationship_to_res
+    datatype: checkboxes
+    choices:
+      - Married to each other now or in the past
+      - Child together
+      - Dated or had a sexual relationship but did not live together
+      - Lived together but did not date or have a sexual relationship
+      - Lived together and dated or had a sexual relationship
+      - Related by marriage (such as in-laws)
+      - I am a child of a person in a relationship described above
+      - Related by blood or adoption
+      # add an empty text box after the last option
+      # if they select "none of the above" then go to "how do you know them" choice screen
+subquestion: |
+  **Check all that apply:**
+---
+question: |
+  How do you know the respondent?
+fields:
+  - no label: relationship_to_res_2
+    datatype: checkboxes
+    choices:
+      - (former) friend
+      - neighbor, landlord, or tenant (not living together)
+      - classmate
+      - partner or ex-partner of one of my family members
+      - ex-partner of my current significant other
+      - current significant other of my ex-partner
+      - my legal guardian
+      - client or former client
+      - co-worker or employer
+      - correctional facility employee, police officer, or probation officer
+      - I do not know and have never been acquainted with Respondent
+# if they select "none of the above" then go to "Decribe how you know them" screen
+subquestion: |
+  **Check all that apply:**
+---
+question: |
+ Describe how you know the respondent:
+Fields:
+  - no label: description_relationship_res
+    input type: area
+---
+question: |
+  ## Next we will ask you:
+  * what type of protective order you need and
+  * questions about what you want the judge to order. 
+continue button field: introduction
+---
+question: |
+  What type of protective order do you need?
+field: order_type
+buttons:
+  - 20 Day Order: 20_day_order
+  - 1 Year Order: 1_year_order
+  - Both: both_order_types
+subquestion: |
+  * **20 Day Order:**  If granted, a 20 day (short term) order can start right away without telling the person you want protection from. 
+  * **1 Year Order:**  If granted, a one year (long term) order can start after the person you want protection from is notified and after a court hearing. The person you want protection from is entitled by law to 10 days' notice before the hearing can take place. Long term orders may be extended. Each extension lasts for one more year, and you may request an extension each year for as many years as needed. 
+  * **Both:**  If you need an order for more than 20 days, you can ask for both a 20 day order and a one year order.
+---
+question:
+  Did you tell ${ res_first_name } that you are asking for a protective order?
+  # certify to the court in writing the efforts if any made to provide notice to the respondent
+subquestion:
+  You are not required to notify the respondent.
+fields:
+  - no label: res_knows_about_order
+    datatype: yesnoradio
+  - note: How did you notify ${ res_first_name } about the protective order?
+    show if: res_knows_about_order
+  - no label: order_knows
+    input type: area
+    required: True
+    show if: res_knows_about_order
+  # you are not required to tell them you are asking for a pro Order.
+---
+question: |
+  Has ${ res_first_name } the respondent stalked you?
+yesno: res_stalked
+subquestion: |
+  “Stalking” under AS 11.41.260-270 means that the respondent knowingly made “nonconsensual contact” with you two or more times, **and** that because of these contacts, you were reasonably afraid of death or physical injury, or the death or physical injury of a family member.
+  
+  “Contact” includes many things (not all of them are listed here). Examples are- calling you, messaging you on social media, following you, going onto your property, leaving objects for you, tracking you with GPS, hacking your phone
+  
+  “Nonconsensual contact” means -
+  
+  * Contact that you did not specifically agree to, or is not reasonable under generally accepted social norms
+  * Contact that you agreed to at first, but it continued after you told the respondent you no longer wanted it
+  * Contact that goes beyond what you agreed to Note- If there is back-and-forth conversation or argument between you and the respondent, it is usually not considered nonconsensual contact, even if the conversation is negative
+---
+question: |
+  Did the respondent’s actions make you afraid that you would be physically injured or killed?
+yesno: res_actions_injured
+---
+question: |
+  Did the respondent’s actions make you afraid that a family member would be killed or physically injured?
+yesno: res_actions_injure_family
+---
+code: |
+  family.gather()
+---
+objects:
+  - family: DAList.using(object_type=Individual)
+---
+question: |
+  Do any family members need protection?
+yesno: family.there_are_any
+---
+question: |
+  What is the ${ordinal(i)} family members name and relationship to you?
+fields:
+  - First name: family[i].name.first
+  - Last name: family[i].name.last
+  - Relationship to me: family[i].relationship
+---
+question: |
+  Do any more family members need protection?
+yesno: family.there_is_another
+---
+question: |
+  Did you specifically tell Respondent not to have contact with you?
+# this comes across harsh or insensitive.  Suggest rewording.
+yesno: tell_res_no_contact
+---
+question: |
+  Describe how you let the respondent know(communicated this to Respondent). Include date(s) and time(s). REWORD
+fields:
+  - no label: describe_communication
+    input type: area
+--- 
+question: |
+  Describe why Respondent should have known not to contact you anyway REWORD.
+fields:
+  - no label: describe_no_contact
+    input type: area
+---
+question: |
+  # Orders to Limit Contact
+  * The judge can order that ${res_first_name} not contact you in any way directly or indirectly. 
+  * Or the judge can order some limited contact if you think it would be safe.<br><br>
+  **Important to Note**: Even if you ask for no contact, the judge may order limited contact if it can be safe. Think about times that might come up where some contact may be needed (school, work, church, bills, etc.).
+subquestion: |
+  Pick one of these options:
+fields:
+  - no label: stalking_order_contact
+    choices:
+      - I want the judge to order no contact at all.
+      - I want the judge to order contact in a limited way.
+      # This appears unnecessary.  Should we skip this drop down and instead ask the contact questions and from there the user can select yes or no?
+---
+question: |
+  Select the type of contact that would be safe:
+#likely remove this and add individual questions. This one and next one are test screens.
+fields:
+  - Phone: stalking_phone_contact
+    datatype: yesnowide
+  - Text: stalking_text_contact
+    datatype: noyeswide
+  - Email: stalking_email_contact
+    datatype: noyeswide
+  - Through another person: stalking_person_contact
+    datatype: noyeswide
+  - No type of contact is safe: stalking_nosafe_contact
+    datatype: noyeswide  
+  - no label: test_order
+    input type: area
+    required: True
+    show if: stalking_nosafe_contact
+---
+question: |
+  Select the type of contact that would be safe:
+fields:
+  - no label: relationship_to_res_test
+    datatype: checkboxes
+    choices:
+      - Phone
+      - Text
+      - Email
+      - Through another person
+      - No type of contact is safe
+      # testing this screen style
+subquestion: |
+  **Check all that apply:**
+---
+question: |
+  Would contact be safe by **phone**?
+fields:
+  - no label: phone_contact_safe
+    datatype: yesnoradio
+  - Phone number: safe_phone_stalking
+    required: True
+    show if: phone_contact_safe
+  - Describe the hours and topic of phone contact that is safe.: safe_phone_stalking_description
+    input type: area
+    required: True
+    show if: phone_contact_safe
+---
+question: |
+  Would contact be safe by **text**?
+fields:
+  - no label: text_contact_safe_stalking
+    datatype: yesnoradio
+  - Phone number: safe_text_stalking
+    required: True
+    show if: text_contact_safe_stalking
+  - Describe the hours and topic of text contact that is safe.: safe_text_stalking_description
+    input type: area
+    required: True
+    show if: text_contact_safe_stalking
+---
+question: |
+  Would contact be safe by **email**?
+#test using the hint function for labeling
+fields:
+  - no label: email_contact_safe_stalking
+    datatype: yesnoradio
+  - no label: safe_email_stalking
+    hint: Enter safe email address.
+    required: True
+    show if: email_contact_safe_stalking
+  - no label: safe_text_stalking_description
+    input type: area
+    hint: Describe the hours and topic of email contact that is safe.
+    required: True
+    show if: email_contact_safe_stalking
+---
+question: |
+  Would contact be safe **through another person**?
+#test using the hint function for labeling
+fields:
+  - no label: person_contact_safe_stalking
+    datatype: yesnoradio
+  - no label: safe_person_stalking
+    hint: Type the name of the person here. 
+    required: True
+    show if: person_contact_safe_stalking
+  - no label: safe_person_stalking_description
+    input type: area
+    hint:  If you want to limit this contact, describe it here.
+    required: True
+    show if: person_contact_safe_stalking
+---
+question: |
+  Do you want the judge to order Respondent to stay away from your **residence**?
+fields:
+  - no label: residence_stay_away_stalking
+    datatype: yesnoradio
+  - Does the respondent live here as well?: residence_res_lives_stalking
+    datatype: yesnoradio
+    show if: residence_stay_away_stalking
+  - no label: residence_address_stalking
+    hint: Enter the street address of where you are living now. 
+    required: True
+    show if: residence_stay_away_stalking
+  - no label: safe_person_stalking_description
+    input type: area
+    hint:  If you want to limit this contact, describe it here.
+    required: True
+    show if: residence_stay_away_stalking
+---
+question: |
+  How old are you?
+fields:
+  - birthdate: birthday
+    datatype: date
+---
+question: |
+  Results
+subquestion: |
+  Thank you, ${user_first_name}.
+  
+  We will send your results to Dewey, Cheatem and Howe.
+---
+template: email_contents
+content: |
+  Here is the intake
+  
+  First name: ${ user_first_name }  
+  Last name: ${ user_last_name }
+
+  Birthdate: ${birthday}
+---
+code: |
+  send_email(to="dewey@example.com", template=email_contents)
